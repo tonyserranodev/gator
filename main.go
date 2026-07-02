@@ -32,10 +32,8 @@ func main() {
 	userArgs := os.Args
 
 	cmdName := userArgs[1]
-	fmt.Printf("cmdName: %s\n", cmdName)
 
 	cmdArgs := userArgs[2:]
-	fmt.Printf("cmdArgs: %s\n", cmdArgs)
 
 	err = cmds.run(st, command{name: cmdName, args: cmdArgs})
 	if err != nil {
