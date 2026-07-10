@@ -1,11 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
+
 	"github.com/tonyserranodev/gator/internal/config"
+	"github.com/tonyserranodev/gator/internal/database"
 )
 
 func main() {
@@ -14,7 +18,15 @@ func main() {
 		log.Fatalf("error reading gatorconfig: %v", err)
 	}
 
+	db, err := sql.Open("postgres", cfg.DbURL)
+	if err != nil {
+		log.Fatalf("error opening database: %v", err)
+	}
+
+	dbQueries := database.New(db)
+
 	st := &state{
+		db:  dbQueries,
 		cfg: &cfg,
 	}
 
@@ -23,6 +35,16 @@ func main() {
 	}
 
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerUsers)
+	cmds.register("agg", handlerAgg)
+	cmds.register("addfeed", middlewareLoggedIn(handlerAddFeed))
+	cmds.register("feeds", handlerFeeds)
+	cmds.register("follow", middlewareLoggedIn(handlerFollow))
+	cmds.register("following", middlewareLoggedIn(handlerFollowing))
+	cmds.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+	cmds.register("browse", middlewareLoggedIn(handlerBrowse))
 
 	if len(os.Args) < 2 {
 		fmt.Println("must provide the name of a command")
@@ -38,5 +60,7 @@ func main() {
 	err = cmds.run(st, command{name: cmdName, args: cmdArgs})
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
+
 }
