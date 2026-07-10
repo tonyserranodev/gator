@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os"
 )
 
 func handlerLogin(s *state, cmd command) error {
@@ -12,9 +14,15 @@ func handlerLogin(s *state, cmd command) error {
 
 	username := cmd.args[0]
 
-	s.cfg.CurrentUserName = username
+	user, err := s.db.GetUser(context.Background(), username)
+	if err != nil {
+		fmt.Printf("username %s not found\n", username)
+		os.Exit(1)
+	}
 
-	err := s.cfg.SetUser()
+	s.cfg.CurrentUserName = user.Name
+
+	err = s.cfg.SetUser()
 	if err != nil {
 		return err
 	}
